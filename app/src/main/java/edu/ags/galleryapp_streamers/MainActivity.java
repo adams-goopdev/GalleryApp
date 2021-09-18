@@ -1,5 +1,6 @@
 package edu.ags.galleryapp_streamers;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -32,7 +33,7 @@ import java.io.InputStreamReader;
 public class MainActivity extends AppCompatActivity implements GestureDetector.OnGestureListener {
 
     Streamers[] streamers = {
-            new Streamers("TimtheTatman", "descT"),
+            new Streamers("TimTheTatman", "descT"),
             new Streamers("Nickmercs", "descN"),
             new Streamers("Dr Disrespect", "descD")
     };
@@ -139,12 +140,20 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
                 imgCard.setImageResource(imgs2[cardNo]);
                 tvCard.setText(streamers[cardNo].desc);
 
+                Typeface face = Typeface.MONOSPACE;
+                tvCard.setTypeface(face);
+                tvCard.setTextSize(18);
+
             } else {
                 //show the front
                 message = "Go to Front";
                 imgCard.setVisibility(View.VISIBLE);
                 imgCard.setImageResource(imgs[cardNo]);
                 tvCard.setText(streamers[cardNo].name);
+
+                Typeface face = Typeface.SERIF;
+                tvCard.setTypeface(face);
+                tvCard.setTextSize(32);
             }
 
             isFront = !isFront;

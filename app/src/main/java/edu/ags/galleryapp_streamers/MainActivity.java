@@ -6,6 +6,9 @@ import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.navigation.NavController;
@@ -17,8 +20,35 @@ import edu.ags.galleryapp_streamers.databinding.ActivityMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+public class MainActivity extends AppCompatActivity implements GestureDetector.OnGestureListener {
+
+    Streamers[] streamers = {
+            new Streamers("TimtheTatman", "descT"),
+            new Streamers("Nickmercs", "descN"),
+            new Streamers("Dr Disrespect", "descD")
+    };
+
+    int[] imgs = {R.drawable.tim, R.drawable.nick, R.drawable.doc};
+    int[] textfiles = {R.raw.tim, R.raw.nick, R.raw.doc};
+    int[] imgs2 = {R.drawable.timrage, R.drawable.nickrage, R.drawable.docrage};
+
+    public static final String TAG = "myDebug";
+    private GestureDetector gestureDetector;
+    private int cardNo = 0;
+    private boolean isFront = true;
+
+    private TextView tvCard;
+    private ImageView imgCard;
+
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
@@ -29,6 +59,16 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+
+        //Need this or else the app crashes on touch
+        //instantiate the gesture listener
+        gestureDetector = new GestureDetector(this, this);
+
+        tvCard = findViewById(R.id.tvCard);
+        imgCard = findViewById(R.id.imgCard);
+
+        streamers[cardNo].desc = readFile(textfiles[cardNo]);
 
         setSupportActionBar(binding.toolbar);
 
@@ -43,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        Log.d(TAG, "onCreate: ");
     }
 
     @Override
@@ -73,4 +115,165 @@ public class MainActivity extends AppCompatActivity {
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
     }
+
+    @Override
+    public boolean onDown(MotionEvent motionEvent) {
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent motionEvent) {
+
+        Log.d(TAG, "onSingleTapUp: You made it to Single tap");
+        String message;
+
+        try {
+            if (isFront) {
+                //show the back
+                message = "Go to Back";
+                imgCard.setImageResource(imgs2[cardNo]);
+                tvCard.setText(streamers[cardNo].desc);
+
+            } else {
+                //show the front
+                message = "Go to Front";
+                imgCard.setVisibility(View.VISIBLE);
+                imgCard.setImageResource(imgs[cardNo]);
+                tvCard.setText(streamers[cardNo].name);
+            }
+
+            isFront = !isFront;
+            Log.d(TAG, "TapTap " + message);
+            return true;
+
+        } catch (Exception e) {
+            Log.d(TAG, "Error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) {
+        Log.d(TAG, "On Fling: ");
+
+        try {
+            //decide fling direction
+            int x1 = (int) motionEvent.getX();
+            int x2 = (int) motionEvent1.getX();
+
+            int numCards = streamers.length;
+
+            if (x1 < x2) {
+                Log.d(TAG, "onFling: Right");
+                Animation moveRight = AnimationUtils.loadAnimation(this, R.anim.moveright);
+                moveRight.setAnimationListener(new AnimationListener());
+                imgCard.startAnimation(moveRight);
+                tvCard.startAnimation(moveRight);
+
+                cardNo = (cardNo + numCards - 1) % numCards;
+            } else {
+                Log.d(TAG, "onFling: Left");
+                Animation moveLeft = AnimationUtils.loadAnimation(this, R.anim.moveleft);
+                moveLeft.setAnimationListener(new AnimationListener());
+                imgCard.startAnimation(moveLeft);
+                tvCard.startAnimation(moveLeft);
+                cardNo = (cardNo + 1) % numCards;
+            }
+
+            return true;
+        } catch (Exception e) {
+            Log.d(TAG, "onFling: Error" + e.getMessage());
+        }
+
+        return false;
+    }
+
+    //Add for touch events. Need to manually add this
+    @Override
+    public boolean onTouchEvent(MotionEvent motionEvent) {
+        return gestureDetector.onTouchEvent(motionEvent);
+    }
+
+    private void updateToNextCard()
+    {
+        streamers[cardNo].desc = readFile(textfiles[cardNo]);
+        isFront = true;
+        imgCard.setVisibility(View.VISIBLE);
+        imgCard.setImageResource(imgs[cardNo]);
+        tvCard.setText(streamers[cardNo].name);
+    }
+
+    private class AnimationListener implements Animation.AnimationListener {
+
+        @Override
+        public void onAnimationStart(Animation animation) {
+
+        }
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+            Log.d(TAG, "onAnimationEnd: ");
+            updateToNextCard();
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+
+        }
+    }
+
+
+    private String readFile(int fileID)
+    {
+        InputStream inputStream;
+        InputStreamReader inputStreamReader;
+        BufferedReader bufferedReader;
+        StringBuffer stringBuffer;
+
+        try {
+            inputStream = getResources().openRawResource(fileID);
+            inputStreamReader = new InputStreamReader(inputStream);
+            bufferedReader = new BufferedReader(inputStreamReader);
+            stringBuffer = new StringBuffer();
+
+            String data;
+
+            while((data = bufferedReader.readLine()) !=null)
+            {
+                stringBuffer.append(data + "\n");
+            }
+
+            bufferedReader.close();
+            inputStreamReader.close();
+            inputStream.close();
+
+            return stringBuffer.toString();
+        }
+        catch (Exception e) {
+
+            e.printStackTrace();
+            return e.getMessage();
+
+        }
+
+    }
+
+
+
+
 }

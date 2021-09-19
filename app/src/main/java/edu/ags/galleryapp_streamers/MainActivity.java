@@ -1,5 +1,6 @@
 package edu.ags.galleryapp_streamers;
 
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 
@@ -34,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
     Streamers[] streamers = {
             new Streamers("TimTheTatman", "descT"),
-            new Streamers("Nickmercs", "descN"),
+            new Streamers("NICKMERCS", "descN"),
             new Streamers("Dr Disrespect", "descD")
     };
 
@@ -103,10 +104,22 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+        if (id == R.id.tim_menu)
+        {
+            cardNo = 0;
+            updateToNextCard();
 
+        }
+        else if (id== R.id.nick_menu)
+        {
+            cardNo = 1;
+            updateToNextCard();
+        }
+        else if (id == R.id.doc_menu)
+        {
+            cardNo = 2;
+            updateToNextCard();
+        }
         return super.onOptionsItemSelected(item);
     }
 
